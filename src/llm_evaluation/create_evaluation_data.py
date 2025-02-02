@@ -6,10 +6,10 @@ import argparse
 import json
 import os
 import random
-import uuid
 from glob import glob
 
 from tqdm import tqdm
+import logging
 
 from ..utilities.llm_models import get_llm_model_chat
 from .prompts import OPEN_QUESTION_PROMPT_EN as OPEN_QUESTION_PROMPT
@@ -38,8 +38,7 @@ def generate_questions(
     files = glob(os.path.join(input_folder, "*." + file_type)) + glob(
         os.path.join(input_folder, "*/*." + file_type)
     )
-    files = files[:5]
-    print(f"Found {len(files)} files in {input_folder}.")
+    logging.info(f"Found {len(files)} files in {input_folder}.")
 
     if len(files):
         files = random.sample(files, min(n_files, len(files)))
@@ -49,23 +48,25 @@ def generate_questions(
         for file in tqdm(files):
             lines = load_data(file)
             if len(lines.strip().split()) < 100:
-                print(f"Ignoring {file} (too few words)")
+                logging.warning(f"Ignoring {file} (too few words)")
+                continue
+
+            name = os.path.basename(file).replace(file_type, "")
+
+            # Generate a unique filename for the output
+            output_filename = f"{name}txt"
+            output_path = os.path.join(output_folder, output_filename)
+            if os.path.isfile(output_path):
                 continue
 
             # Generate the text using the LLM
             text = llm.invoke([("user", OPEN_QUESTION_PROMPT.format(context=lines))])
 
-            name = os.path.basename(file).replace(".txt", "")
-
-            # Generate a unique filename for the output
-            output_filename = f"{name}_{uuid.uuid4().hex}.txt"
-            output_path = os.path.join(output_folder, output_filename)
-
             # Save the generated content to the output file
             with open(output_path, "w") as out_file:
                 out_file.write(text.content)
 
-            print(f"Saved generated questions to {output_path}")
+            logging.info(f"Saved generated questions to {output_path}")
 
 
 if __name__ == "__main__":
@@ -76,7 +77,9 @@ if __name__ == "__main__":
         default="data/summaries",
         help="Path to the folder containing input text files.",
     )
-    parser.add_argument("--n_files", type=int, help="Number of files to process.")
+    parser.add_argument(
+        "--n_files", type=int, default=250, help="Number of files to process."
+    )
     parser.add_argument(
         "--output_folder",
         type=str,
