@@ -1,4 +1,3 @@
-from langchain_ollama import ChatOllama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pathlib import Path
 import tiktoken
@@ -9,12 +8,12 @@ from typing import List, Dict
 
 from .prompts import SUMMARY_PROMPT, FINAL_PROMPT
 import argparse
+from .utilities.llm_models import get_llm_model_chat
 
 
 class HierarchicalSummarizer:
     def __init__(
         self,
-        model_name: str = "phi4",
         max_tokens_per_chunk: int = 4000,
         min_chunk_size: int = 1000,
         chunk_overlap: int = 200,
@@ -27,10 +26,9 @@ class HierarchicalSummarizer:
         self.output_folder.mkdir(exist_ok=True)
 
         # Initialize LLM
-        self.llm = ChatOllama(
-            model=model_name,
+        self.llm = get_llm_model_chat(
             temperature=0.8,
-            num_predict=1500,
+            max_tokens=1500,
         )
 
         # Setup text splitter with given parameters
