@@ -1,0 +1,21 @@
+langchain-ollama==0.2.2
+langchain-groq==0.2.3
+langchain-community==0.3.14
+langchain-chroma==0.1.4
+langchain-huggingface
+langchain==0.3.14
+ollama==0.4.5
+chromadb==0.5.23
+# OCR
+pdf2image==1.17.0
+Pillow==11.1.0
+easyocr==1.7.2
+PyMuPDF==1.25.1
+tqdm==4.67.1
+keybert==0.8.5
+gradio==5.9.1
+rank_bm25==0.2.2
+groq==0.15.0
+gdown==5.2.0
+retriv==0.2.3
+tiktoken
