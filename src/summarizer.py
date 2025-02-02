@@ -1,13 +1,13 @@
 from langchain_ollama import ChatOllama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.prompts import PromptTemplate
 from pathlib import Path
 import tiktoken
 import os
-import json
 import logging
 from datetime import datetime
 from typing import List, Dict
+
+from .prompts import SUMMARY_PROMPT, FINAL_PROMPT
 
 class HierarchicalSummarizer:
     def __init__(
@@ -40,35 +40,7 @@ class HierarchicalSummarizer:
         )
         
         # Setup prompt for chunk-level summarization
-        self.summary_prompt = PromptTemplate(
-            template="""You are tasked with creating an iterative summary of a long document. Your goal is to summarize the given text while preserving key information and insights. This summary will be part of a larger document summary, so it's important to maintain coherence with previous summaries.
-
-Here is the text you need to summarize:
-<text>
-{text}
-</text>
-
-Here is the context from previous summaries (this may be empty if you're summarizing the first page):
-<context>
-{context}
-</context>
-
-Follow these steps to create your summary:
-
-1. Read the provided text carefully.
-2. If context is provided, review it to understand what has been summarized previously.
-3. Identify the main ideas, key points, and essential details in the text.
-4. Create a concise summary that:
-   a. Captures the most important information
-   b. Maintains the original meaning and tone
-   c. Avoids redundancy with the context (if provided)
-   d. Preserves any crucial facts, figures, or insights
-   e. Ensures coherence with the previous summaries (if context is provided)
-5. Keep your summary clear, objective, and well-structured.
-
-SUMMARY:""",
-            input_variables=["text", "context"]
-        )
+        self.summary_prompt = SUMMARY_PROMPT
         
         # Setup logging
         logging.basicConfig(level=logging.INFO)
@@ -119,6 +91,13 @@ SUMMARY:""",
             f.write(summary_text)
         self.logger.info(f"Saved summary for level {level} chunk {chunk_index} to {filename}")
 
+    def load_or_summarize(self, level: int, chunk_pos: int, chunk: str, summary_text: str):
+        files = list(self.output_folder.glob(f"level_{level}_chunk_{chunk_pos}_*.txt"))
+        if files:
+            return open(files[0]).read(), True
+        summary_text = self.summarize_chunk(chunk, summary_text)
+        return summary_text, False
+
     def process_level(self, text: str, level: int) -> List[str]:
         """
         Process one summarization level: split the text into chunks,
@@ -130,47 +109,17 @@ SUMMARY:""",
         summary_text = ""
         for i, chunk in enumerate(chunks):
             self.logger.info(f"Summarizing chunk {i+1}/{len(chunks)} at level {level}")
-            summary_text = self.summarize_chunk(chunk, summary_text)
-            self.save_intermediate_summary(summary_text, level, i)
+            summary_text, found = self.load_or_summarize(level, i, chunk, summary_text)
+            if not found:
+                self.save_intermediate_summary(summary_text, level, i)
             level_summaries.append(summary_text)
         return level_summaries
 
     def create_final_summary(self, text: str) -> str:
         """Create a final summary from the aggregated summaries."""
-        final_prompt = PromptTemplate(
-            template="""You are tasked with creating a final summary based on a set of section summaries. Your goal is to synthesize the information from these summaries into a coherent, logically flowing final summary that preserves key insights from each section.
-
-Here are the section summaries you will be working with:
-
-<section_summaries>
-{SECTION_SUMMARIES}
-</section_summaries>
-
-To create the final summary, follow these steps:
-
-1. Carefully read through all the section summaries to understand the main topics and key points.
-
-2. Identify the overarching themes or main ideas that connect the different sections.
-
-3. Organize the information in a logical order, ensuring a smooth flow from one topic to another.
-
-4. Synthesize the key insights from each section, avoiding repetition and maintaining coherence.
-
-5. Ensure that the final summary captures the essence of all sections without favoring any particular one.
-
-6. Use transitional phrases to connect ideas and maintain a smooth flow throughout the summary.
-
-7. Keep the language clear, concise, and appropriate for the subject matter.
-
-8. Aim for a final summary that is comprehensive yet concise, typically about 25 percent of the total length of all section summaries combined.
-
-Remember to maintain coherence and logical flow while preserving key insights from each section. Your summary should provide a clear overview of the entire content without losing important details from individual sections.
-
-FINAL SUMMARY:""",
-            input_variables=["text"]
-        )
+        final_prompt = FINAL_PROMPT
         final_chain = final_prompt | self.llm
-        final_result = final_chain.invoke({"text": text})
+        final_result = final_chain.invoke({"SECTION_SUMMARIES": text})
         return final_result.content.strip()
 
     def summarize(self, folder_path: str, max_level = 5) -> Dict:
