@@ -41,12 +41,33 @@ class HierarchicalSummarizer:
         
         # Setup prompt for chunk-level summarization
         self.summary_prompt = PromptTemplate(
-            template="""Summarize the following text while preserving key information and insights.
+            template="""You are tasked with creating an iterative summary of a long document. Your goal is to summarize the given text while preserving key information and insights. This summary will be part of a larger document summary, so it's important to maintain coherence with previous summaries.
 
-TEXT: {text}
+Here is the text you need to summarize:
+<text>
+{text}
+</text>
+
+Here is the context from previous summaries (this may be empty if you're summarizing the first page):
+<context>
+{context}
+</context>
+
+Follow these steps to create your summary:
+
+1. Read the provided text carefully.
+2. If context is provided, review it to understand what has been summarized previously.
+3. Identify the main ideas, key points, and essential details in the text.
+4. Create a concise summary that:
+   a. Captures the most important information
+   b. Maintains the original meaning and tone
+   c. Avoids redundancy with the context (if provided)
+   d. Preserves any crucial facts, figures, or insights
+   e. Ensures coherence with the previous summaries (if context is provided)
+5. Keep your summary clear, objective, and well-structured.
 
 SUMMARY:""",
-            input_variables=["text"]
+            input_variables=["text", "context"]
         )
         
         # Setup logging
@@ -56,7 +77,7 @@ SUMMARY:""",
     def read_documents(self, folder_path: str) -> List[str]:
         """Read and return contents of all .txt files in the folder (sorted)."""
         folder = Path(folder_path)
-        txt_files = sorted(folder.glob("*.txt"))
+        txt_files = sorted(folder.glob("*.txt"))[10:70]
         documents = []
         for file_path in txt_files:
             try:
@@ -84,10 +105,10 @@ SUMMARY:""",
         docs = self.text_splitter.create_documents([text])
         return [doc.page_content for doc in docs]
 
-    def summarize_chunk(self, chunk_text: str) -> str:
+    def summarize_chunk(self, chunk_text: str, context: str) -> str:
         """Summarize a single chunk using the summary prompt."""
         summary_chain = self.summary_prompt | self.llm
-        result = summary_chain.invoke({"text": chunk_text})
+        result = summary_chain.invoke({"text": chunk_text, "context": context})
         return result.content.strip()
 
     def save_intermediate_summary(self, summary_text: str, level: int, chunk_index: int) -> None:
@@ -106,9 +127,10 @@ SUMMARY:""",
         self.logger.info(f"Processing summarization level {level}")
         chunks = self.split_into_chunks(text)
         level_summaries = []
+        summary_text = ""
         for i, chunk in enumerate(chunks):
             self.logger.info(f"Summarizing chunk {i+1}/{len(chunks)} at level {level}")
-            summary_text = self.summarize_chunk(chunk)
+            summary_text = self.summarize_chunk(chunk, summary_text)
             self.save_intermediate_summary(summary_text, level, i)
             level_summaries.append(summary_text)
         return level_summaries
@@ -116,10 +138,33 @@ SUMMARY:""",
     def create_final_summary(self, text: str) -> str:
         """Create a final summary from the aggregated summaries."""
         final_prompt = PromptTemplate(
-            template="""Create a final summary based on the following section summaries.
-Maintain coherence and logical flow while preserving key insights.
+            template="""You are tasked with creating a final summary based on a set of section summaries. Your goal is to synthesize the information from these summaries into a coherent, logically flowing final summary that preserves key insights from each section.
 
-SECTION SUMMARIES: {text}
+Here are the section summaries you will be working with:
+
+<section_summaries>
+{SECTION_SUMMARIES}
+</section_summaries>
+
+To create the final summary, follow these steps:
+
+1. Carefully read through all the section summaries to understand the main topics and key points.
+
+2. Identify the overarching themes or main ideas that connect the different sections.
+
+3. Organize the information in a logical order, ensuring a smooth flow from one topic to another.
+
+4. Synthesize the key insights from each section, avoiding repetition and maintaining coherence.
+
+5. Ensure that the final summary captures the essence of all sections without favoring any particular one.
+
+6. Use transitional phrases to connect ideas and maintain a smooth flow throughout the summary.
+
+7. Keep the language clear, concise, and appropriate for the subject matter.
+
+8. Aim for a final summary that is comprehensive yet concise, typically about 25 percent of the total length of all section summaries combined.
+
+Remember to maintain coherence and logical flow while preserving key insights from each section. Your summary should provide a clear overview of the entire content without losing important details from individual sections.
 
 FINAL SUMMARY:""",
             input_variables=["text"]
@@ -128,7 +173,7 @@ FINAL SUMMARY:""",
         final_result = final_chain.invoke({"text": text})
         return final_result.content.strip()
 
-    def summarize(self, folder_path: str) -> Dict:
+    def summarize(self, folder_path: str, max_level = 5) -> Dict:
         """
         Main method to perform hierarchical summarization.
         Reads, merges, and processes document content through multiple levels until it fits within limits.
@@ -145,7 +190,7 @@ FINAL SUMMARY:""",
         all_level_summaries = []
         
         # Continue processing until the text is short enough
-        while len(self.encoding.encode(current_text)) > self.max_tokens:
+        while len(self.encoding.encode(current_text)) > self.max_tokens and level <= max_level:
             self.logger.info(f"Level {level} summarization starting...")
             level_summaries = self.process_level(current_text, level)
             all_level_summaries.append(level_summaries)
@@ -162,8 +207,14 @@ FINAL SUMMARY:""",
         }
 
 def main(folder_path: str = "data/297054", output_folder: str = "data/summaries"):
+    output_folder = os.path.join(output_folder, os.path.basename(folder_path))
     os.makedirs(output_folder, exist_ok=True)
-    summarizer = HierarchicalSummarizer(output_folder=output_folder)
+    summarizer = HierarchicalSummarizer(
+        output_folder=output_folder,
+        max_tokens_per_chunk=12000,
+        min_chunk_size=8000,
+        chunk_overlap=300,
+    )
     result = summarizer.summarize(folder_path)
     if result:
         print("\nFinal Summary:\n", result['final_summary'])
