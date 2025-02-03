@@ -37,7 +37,7 @@ def parse_questions_answers_with_regex_file(file):
     return qa_list
 
 
-def parse_questions_answers_with_regex(folder_path):
+def parse_questions_answers_with_regex(folder_path) -> list[tuple[str, str]]:
     """
     Parse question-answer pairs from XML-like text files using regex.
 
