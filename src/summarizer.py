@@ -1,13 +1,14 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pathlib import Path
-import tiktoken
-import os
-import logging
-from datetime import datetime
-from typing import List, Dict
-
-from .prompts import SUMMARY_PROMPT, FINAL_PROMPT
 import argparse
+import logging
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
+
+import tiktoken
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from .prompts import FINAL_PROMPT, SUMMARY_PROMPT
 from .utilities.llm_models import get_llm_model_chat
 
 
@@ -190,7 +191,17 @@ def main(folder_path: str = "data/297054", output_folder: str = "data/summaries"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hierarchical Summarizer")
-    parser.add_argument("--folder_path", type=str, default="data/297054_Volume_2", help="Path to the folder containing text files to summarize")
-    parser.add_argument("--output_folder", type=str, default="data/summaries", help="Path to the folder to save summaries")
+    parser.add_argument(
+        "--folder_path",
+        type=str,
+        default="data/297054_Volume_2",
+        help="Path to the folder containing text files to summarize",
+    )
+    parser.add_argument(
+        "--output_folder",
+        type=str,
+        default="data/summaries",
+        help="Path to the folder to save summaries",
+    )
     args = parser.parse_args()
     main(folder_path=args.folder_path, output_folder=args.output_folder)

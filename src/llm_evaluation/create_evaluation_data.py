@@ -4,12 +4,12 @@ python -m src.llm_evaluation.create_evaluation_data --input_folder data/chunks -
 
 import argparse
 import json
+import logging
 import os
 import random
 from glob import glob
 
 from tqdm import tqdm
-import logging
 
 from ..utilities.llm_models import get_llm_model_chat
 from .prompts import OPEN_QUESTION_PROMPT_EN as OPEN_QUESTION_PROMPT

@@ -10,7 +10,7 @@ class LLMModel(Enum):
     GROQ = ChatGroq
 
 
-def get_llm_model_chat(temperature=0.01, max_tokens: int=None):
+def get_llm_model_chat(temperature=0.01, max_tokens: int = None):
     if str(os.getenv("USE_OLLAMA_CHAT")) == "1":
         return ChatOllama(
             model=os.getenv("OLLAMA_MODEL"),
