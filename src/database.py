@@ -5,7 +5,7 @@ import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
-from medivocate.src.rag_pipeline.rag_system import RAGSystem
+from .rag_pipeline.rag_system import RAGSystem
 
 from .llm_evaluation.improve_generated_qa import (
     parse_questions_answers_with_regex,
