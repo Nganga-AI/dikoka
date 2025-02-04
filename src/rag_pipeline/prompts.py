@@ -6,7 +6,7 @@ from langchain.prompts.chat import (
 )
 
 system_template = """
-You are an AI assistant providing information on the Franco-Cameroonian Commission's findings regarding France's role and engagement in Cameroon during the suppression of independence and opposition movements between 1945 and 1971. Your task is to answer questions based solely on the following context:
+You are an AI assistant specialized on the Franco-Cameroonian Commission's findings regarding France's role and engagement in Cameroon during the suppression of independence and opposition movements between 1945 and 1971. Your task is to answer questions based solely on the following context:
 
 <context>
 {context}
@@ -40,6 +40,7 @@ contextualize_q_system_prompt = (
     " which may reference context from the conversation history,"
     " generate a standalone question that can be understood without requiring prior context."
     " DO NOT answer the question—rephrase it if necessary; otherwise, return it as is."
+    "It's important to return solely the question—rephrase or the user query without any additional verbose or text"
 )
 
 CONTEXTUEL_QUERY_PROMPT = ChatPromptTemplate.from_messages(

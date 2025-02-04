@@ -23,6 +23,17 @@ class ChatInterface:
             yield result
         return result
 
+    def sample_questions(self, questions: List[str]):
+        random_questions = random.sample(questions, 3)
+        example_questions = "\n".join([
+            "### Examples of questions"
+        ] + [f"- {question}" for question in random_questions])
+        return example_questions
+    
+    def sample_summaries(self, summaries: list[str]):
+        random_summary = random.choice(summaries)
+        return f"### Summary\n{random_summary}"
+
     def create_interface(self) -> gr.Blocks:
         questions: list[str] = load_questions()
         summaries: list[str] = load_final_summaries()
@@ -36,13 +47,23 @@ class ChatInterface:
         with gr.Blocks() as demo:
             with gr.Row():
                 random_summary = random.choice(summaries)
-                gr.Markdown(f"### Summary\n{random_summary}")
+                sample_resume = gr.Markdown(f"### Summary\n{random_summary}")
             with gr.Row():
-                random_questions = random.sample(questions, 3)
-                example_questions = "\n".join([
-                    "### Examples of questions"
-                ] + [f"- {question}" for question in random_questions])
-                gr.Markdown(example_questions)
+                sample_summary = gr.Button("Sample Summary")
+                sample_summary.click(
+                    fn=lambda: self.sample_summaries(summaries),
+                    inputs=[],
+                    outputs=sample_resume
+                )
+            with gr.Row():
+                example_questions = gr.Markdown(self.sample_questions(questions))
+            with gr.Row():
+                sample_button = gr.Button("Sample New Questions")
+                sample_button.click(
+                    fn=lambda: self.sample_questions(questions),
+                    inputs=[],
+                    outputs=example_questions
+                )
             with gr.Row():
                 gr.ChatInterface(
                     fn=self.respond,
