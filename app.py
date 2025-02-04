@@ -4,8 +4,8 @@ from typing import List
 
 import gradio as gr
 
-from src.database import get_rag_system, load_questions, load_final_summaries
 from medivocate.src.rag_pipeline.rag_system import RAGSystem
+from src.database import get_rag_system, load_final_summaries, load_questions
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -17,7 +17,9 @@ class ChatInterface:
 
     def respond(self, message: str, history: List[List[str]]):
         result = ""
-        history = [(turn["role"], turn["content"]) for turn in history[-self.history_depth:]]
+        history = [
+            (turn["role"], turn["content"]) for turn in history[-self.history_depth :]
+        ]
         for text in self.rag_system.query(message, history):
             result += text
             yield result
@@ -25,11 +27,12 @@ class ChatInterface:
 
     def sample_questions(self, questions: List[str]):
         random_questions = random.sample(questions, 3)
-        example_questions = "\n".join([
-            "### Examples of questions"
-        ] + [f"- {question}" for question in random_questions])
+        example_questions = "\n".join(
+            ["### Examples of questions"]
+            + [f"- {question}" for question in random_questions]
+        )
         return example_questions
-    
+
     def sample_summaries(self, summaries: list[str]):
         random_summary = random.choice(summaries)
         return f"### Summary\n{random_summary}"
@@ -53,7 +56,7 @@ class ChatInterface:
                 sample_summary.click(
                     fn=lambda: self.sample_summaries(summaries),
                     inputs=[],
-                    outputs=sample_resume
+                    outputs=sample_resume,
                 )
             with gr.Row():
                 example_questions = gr.Markdown(self.sample_questions(questions))
@@ -62,7 +65,7 @@ class ChatInterface:
                 sample_button.click(
                     fn=lambda: self.sample_questions(questions),
                     inputs=[],
-                    outputs=example_questions
+                    outputs=example_questions,
                 )
             with gr.Row():
                 gr.ChatInterface(
