@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import List, Optional
 
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -11,8 +10,9 @@ from langchain.chains.history_aware_retriever import (
 )
 from langchain.chains.retrieval import create_retrieval_chain
 
-from ..utilities.llm_models import get_llm_model_chat
 from medivocate.src.vector_store.vector_store import VectorStoreManager
+
+from ..utilities.llm_models import get_llm_model_chat
 from .prompts import CHAT_PROMPT, CONTEXTUEL_QUERY_PROMPT
 
 
