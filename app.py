@@ -1,9 +1,10 @@
 import os
+import random
 from typing import List
 
 import gradio as gr
 
-from src.database import get_rag_system
+from src.database import get_rag_system, load_questions, load_final_summaries
 from medivocate.src.rag_pipeline.rag_system import RAGSystem
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -22,19 +23,35 @@ class ChatInterface:
             yield result
         return result
 
-    def create_interface(self) -> gr.ChatInterface:
+    def create_interface(self) -> gr.Blocks:
+        questions: list[str] = load_questions()
+        summaries: list[str] = load_final_summaries()
         description = (
-            "Medivocate is an application that offers clear and structured information "
-            "about African history and traditional medicine. The knowledge is exclusively "
-            "based on historical documentaries about the African continent.\n\n"
-            "🌟 **Code Repository**: [Medivocate GitHub](https://github.com/KameniAlexNea/medivocate)"
+            "Dikoka an AI assistant providing information on the Franco-Cameroonian Commission's"
+            " findings regarding France's role and engagement in Cameroon during the suppression"
+            " of independence and opposition movements between 1945 and 1971.\n\n"
+            "🌟 **Code Repository**: [Dikoka GitHub](https://github.com/Nganga-AI/dikoka)"
         )
-        return gr.ChatInterface(
-            fn=self.respond,
-            type="messages",
-            title="Medivocate",
-            description=description,
-        )
+
+        with gr.Blocks() as demo:
+            with gr.Row():
+                random_summary = random.choice(summaries)
+                gr.Markdown(f"### Summary\n{random_summary}")
+            with gr.Row():
+                random_questions = random.sample(questions, 3)
+                example_questions = "\n".join([
+                    "### Examples of questions"
+                ] + [f"- {question}" for question in random_questions])
+                gr.Markdown(example_questions)
+            with gr.Row():
+                gr.ChatInterface(
+                    fn=self.respond,
+                    type="messages",
+                    title="Dikoka",
+                    description=description,
+                )
+
+        return demo
 
 
 # Usage example:

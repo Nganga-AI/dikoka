@@ -1,4 +1,5 @@
 import os
+import random
 from glob import glob
 
 import tiktoken
@@ -15,6 +16,18 @@ from .llm_evaluation.improve_generated_qa import (
 def load_qa_dataset(folder_path: str):
     qa_ds = parse_questions_answers_with_regex(folder_path)
     return [(i[1], "QA_LLM") for i in qa_ds]
+
+def load_questions():
+    qa_ds = parse_questions_answers_with_regex("data/questions")
+    return [i[0] for i in qa_ds]
+
+def load_final_summaries():
+    files = glob("data/summaries/*/final_summary.txt") + glob("data/summaries/*/level_2_chunk_*.txt")
+    data = [
+        open(file).read() for file in files
+    ]
+    random.shuffle(data)
+    return data
 
 
 def load_summaries(folder_path: str):
