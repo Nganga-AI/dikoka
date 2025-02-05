@@ -81,13 +81,12 @@ class ChatInterface:
 
 
 def get_rag_system(top_k_documents):
-    rag = RAGSystem(
-        "data/chroma_db", batch_size=64, top_k_documents=top_k_documents
-    )
+    rag = RAGSystem("data/chroma_db", batch_size=64, top_k_documents=top_k_documents)
     if not os.path.exists(rag.vector_store_management.persist_directory):
         documents = load_dataset()
         rag.initialize_vector_store(documents)
     return rag
+
 
 # Usage example:
 if __name__ == "__main__":
