@@ -10,9 +10,8 @@ from langchain.chains.history_aware_retriever import (
 )
 from langchain.chains.retrieval import create_retrieval_chain
 
-from medivocate.src.vector_store.vector_store import VectorStoreManager
-
 from ..utilities.llm_models import get_llm_model_chat
+from ..vector_store.vector_store import VectorStoreManager
 from .prompts import CHAT_PROMPT, CONTEXTUEL_QUERY_PROMPT
 
 
@@ -48,7 +47,7 @@ class RAGSystem:
         if self.chain is not None:
             return
         retriever = self.vector_store_management.create_retriever(
-            self.top_k_documents, bm25_portion=0.03
+            self.llm, self.top_k_documents, bm25_portion=0.03
         )
 
         # Contextualize question
