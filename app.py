@@ -5,7 +5,7 @@ from typing import List
 import gradio as gr
 
 from medivocate.src.rag_pipeline.rag_system import RAGSystem
-from src.database import get_rag_system, load_final_summaries, load_questions
+from src.database import load_dataset, load_final_summaries, load_questions
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -79,6 +79,15 @@ class ChatInterface:
                 )
         return demo
 
+
+def get_rag_system(top_k_documents):
+    rag = RAGSystem(
+        "data/chroma_db", batch_size=64, top_k_documents=top_k_documents
+    )
+    if not os.path.exists(rag.vector_store_management.persist_directory):
+        documents = load_dataset()
+        rag.initialize_vector_store(documents)
+    return rag
 
 # Usage example:
 if __name__ == "__main__":

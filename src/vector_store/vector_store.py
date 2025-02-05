@@ -30,8 +30,7 @@ class VectorStoreManager:
     Manages vector store initialization, updates, and retrieval.
     """
 
-    def __init__(self, docs_dir: str, persist_directory: str, batch_size: int = 64):
-        self.docs_dir = docs_dir
+    def __init__(self, persist_directory: str, batch_size: int = 64):
         self.persist_directory = persist_directory
         self.batch_size = batch_size
         self.embeddings = get_llm_model_embedding()
@@ -98,5 +97,5 @@ class VectorStoreManager:
 
     def load_and_process_documents(self) -> List[Document]:
         """Loads and processes documents from the specified directory."""
-        loader = DocumentLoader(self.docs_dir)
+        loader = DocumentLoader()
         return loader.load_documents()

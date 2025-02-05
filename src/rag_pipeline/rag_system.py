@@ -18,7 +18,6 @@ from .prompts import CHAT_PROMPT, CONTEXTUEL_QUERY_PROMPT
 class RAGSystem:
     def __init__(
         self,
-        docs_dir: str = "data/chunks",
         persist_directory_dir="data/chroma_db",
         batch_size: int = 64,
         top_k_documents=5,
@@ -27,7 +26,7 @@ class RAGSystem:
         self.llm = self._get_llm()
         self.chain: Optional[BaseConversationalRetrievalChain] = None
         self.vector_store_management = VectorStoreManager(
-            docs_dir, persist_directory_dir, batch_size
+            persist_directory_dir, batch_size
         )
 
     def _get_llm(
