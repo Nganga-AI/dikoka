@@ -11,7 +11,7 @@ from langchain.chains.history_aware_retriever import (
 from langchain.chains.retrieval import create_retrieval_chain
 
 from ..utilities.llm_models import get_llm_model_chat
-from ..vector_store.bivector_store import VectorStoreManager
+from ..vector_store.vector_store import VectorStoreManager
 from .prompts import CHAT_PROMPT, CONTEXTUEL_QUERY_PROMPT
 
 
