@@ -1,10 +1,12 @@
 import os
-from typing import List
+from typing import List, Union
 
-from langchain.retrievers import MultiQueryRetriever
+from langchain.retrievers import EnsembleRetriever, MultiQueryRetriever
 from langchain_chroma import Chroma
+from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 from tqdm import tqdm
+from transformers import AutoTokenizer
 
 from ..utilities.llm_models import get_llm_model_embedding
 from .document_loader import DocumentLoader
@@ -36,9 +38,13 @@ class VectorStoreManager:
         self.batch_size = batch_size
         self.embeddings = get_llm_model_embedding()
         self.collection_name = get_collection_name()
-        self.vector_stores: dict[str, Chroma] = {
+        self.vector_stores: dict[str, Union[Chroma, BM25Retriever]] = {
             "chroma": None,
+            "bm25": None,
         }
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            os.getenv("HF_MODEL", "meta-llama/Llama-3.2-1B")
+        )
         self.vs_initialized = False
         self.vector_store = None
 
@@ -59,6 +65,10 @@ class VectorStoreManager:
                 self.vs_initialized = True
             else:
                 self.vector_stores["chroma"].add_documents(batch)
+
+        self.vector_stores["bm25"] = BM25Retriever.from_documents(
+            documents, tokenizer=self.tokenizer
+        )
 
     def initialize_vector_store(self, documents: List[Document] = None):
         """Initializes or loads the vector store."""
@@ -81,15 +91,23 @@ class VectorStoreManager:
                     all_documents["metadatas"],
                 )
             ]
+            self.vector_stores["bm25"] = BM25Retriever.from_documents(documents)
         self.vs_initialized = True
 
     def create_retriever(
         self, llm, n_documents: int, bm25_portion: float = 0.8
-    ) -> MultiQueryRetriever:
-        """Creates a retriever using Chroma."""
+    ) -> EnsembleRetriever:
+        """Creates an ensemble retriever combining Chroma and BM25."""
+        self.vector_stores["bm25"].k = n_documents
         self.vector_store = MultiQueryRetriever.from_llm(
-            retriever=self.vector_stores["chroma"].as_retriever(
-                search_kwargs={"k": n_documents}
+            retriever=EnsembleRetriever(
+                retrievers=[
+                    self.vector_stores["bm25"],
+                    self.vector_stores["chroma"].as_retriever(
+                        search_kwargs={"k": n_documents}
+                    ),
+                ],
+                weights=[bm25_portion, 1 - bm25_portion],
             ),
             llm=llm,
             include_original=True,

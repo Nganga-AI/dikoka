@@ -9,7 +9,7 @@ import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from .prompts import FINAL_PROMPT, SUMMARY_PROMPT
-from .utilities.llm_models import get_llm_model_chat
+from ..utilities.llm_models import get_llm_model_chat
 
 
 class HierarchicalSummarizer:
