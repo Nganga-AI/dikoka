@@ -20,7 +20,7 @@ def load_qa_dataset(folder_path: str):
 
 def load_questions():
     qa_ds = json.load(open("saved_summaries/questions.json"))
-    return [i[0] for i in qa_ds]
+    return qa_ds
 
 
 def load_final_summaries():

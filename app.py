@@ -49,15 +49,25 @@ class ChatInterface:
 
         with gr.Blocks() as demo:
             with gr.Row():
-                random_summary = random.choice(summaries)
-                sample_resume = gr.Markdown(f"### Summary\n{random_summary}")
-            with gr.Row():
-                sample_summary = gr.Button("Sample Summary")
-                sample_summary.click(
-                    fn=lambda: self.sample_summaries(summaries),
-                    inputs=[],
-                    outputs=sample_resume,
-                )
+                with gr.Column():
+                    with gr.Row():
+                        random_summary = random.choice(summaries)
+                        sample_resume = gr.Markdown(f"### Summary\n{random_summary}")
+                    with gr.Row():
+                        sample_summary = gr.Button("Sample Summary")
+                        sample_summary.click(
+                            fn=lambda: self.sample_summaries(summaries),
+                            inputs=[],
+                            outputs=sample_resume,
+                        )
+                with gr.Column(scale=2):
+                    with gr.Row():
+                        gr.ChatInterface(
+                            fn=self.respond,
+                            type="messages",
+                            title="Dikoka",
+                            description=description,
+                        )
             with gr.Row():
                 example_questions = gr.Markdown(self.sample_questions(questions))
             with gr.Row():
@@ -67,14 +77,6 @@ class ChatInterface:
                     inputs=[],
                     outputs=example_questions,
                 )
-            with gr.Row():
-                gr.ChatInterface(
-                    fn=self.respond,
-                    type="messages",
-                    title="Dikoka",
-                    description=description,
-                )
-
         return demo
 
 
