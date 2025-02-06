@@ -58,7 +58,7 @@ class TranslateSummary:
 
 
 def main(
-    folder_path: str = "data/summaries/297054", output_folder: str = "data/summaries_fr"
+    folder_path: str = "data/summaries/297054_Volume_2", output_folder: str = "data/summaries_fr"
 ):
     output_folder = os.path.join(output_folder, os.path.basename(folder_path))
     os.makedirs(output_folder, exist_ok=True)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--folder_path",
         type=str,
-        default="data/summaries/297054",
+        default="data/summaries/297054_Volume_2",
         help="Path to the folder containing text files to summarize",
     )
     parser.add_argument(

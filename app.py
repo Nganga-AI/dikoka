@@ -28,14 +28,14 @@ class ChatInterface:
     def sample_questions(self, questions: List[str]):
         random_questions = random.sample(questions, 3)
         example_questions = "\n".join(
-            ["### Examples of questions"]
+            ["## Examples of questions"]
             + [f"- {question}" for question in random_questions]
         )
         return example_questions
 
     def sample_summaries(self, summaries: list[str]):
         random_summary = random.choice(summaries)
-        return f"### Summary\n{random_summary}"
+        return f"## Summary\n{random_summary}"
 
     def create_interface(self) -> gr.Blocks:
         questions: list[str] = load_questions()
@@ -48,11 +48,10 @@ class ChatInterface:
         )
 
         with gr.Blocks() as demo:
-            with gr.Row():
+            with gr.Row(equal_height=True):
                 with gr.Column():
                     with gr.Row():
-                        random_summary = random.choice(summaries)
-                        sample_resume = gr.Markdown(f"### Summary\n{random_summary}")
+                        sample_resume = gr.Markdown(self.sample_summaries(summaries))
                     with gr.Row():
                         sample_summary = gr.Button("Sample Summary")
                         sample_summary.click(
@@ -61,13 +60,13 @@ class ChatInterface:
                             outputs=sample_resume,
                         )
                 with gr.Column(scale=2):
-                    with gr.Row():
-                        gr.ChatInterface(
-                            fn=self.respond,
-                            type="messages",
-                            title="Dikoka",
-                            description=description,
-                        )
+                    # with gr.Row(equal_height=True):
+                    gr.ChatInterface(
+                        fn=self.respond,
+                        type="messages",
+                        title="Dikoka",
+                        description=description,
+                    )
             with gr.Row():
                 example_questions = gr.Markdown(self.sample_questions(questions))
             with gr.Row():
