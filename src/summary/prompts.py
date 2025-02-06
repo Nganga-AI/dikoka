@@ -67,9 +67,22 @@ TRANSLATE_PROMPT = PromptTemplate(
     template="""You are tasked with translating a given text from English to French. Your goal is to provide an accurate translation without adding any additional information or context. Follow these steps:
 
 1. Here is the text you need to translate:
-<text_to_translate>
 {text}
-</text_to_translate>
+
+2. Translate the above text into French, adhering to these guidelines:
+   - Maintain the original meaning and tone of the text.
+   - Do not add any explanations, context, or additional information.
+   - Preserve the original formatting, including line breaks and paragraph structure.
+   - If there are any proper nouns or specific terms that should not be translated, keep them in their original form.
+""",
+    input_variables=["text"],
+)
+
+TRANSLATE_QA = PromptTemplate(
+    template="""You are tasked with translating a given text from English to French. Your goal is to provide an accurate translation without adding any additional information or context. Follow these steps:
+
+1. Here is the text you need to translate:
+{text}
 
 2. Translate the above text into French, adhering to these guidelines:
    - Maintain the original meaning and tone of the text.

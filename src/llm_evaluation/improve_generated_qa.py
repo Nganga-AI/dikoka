@@ -30,8 +30,10 @@ def parse_questions_answers_with_regex_file(file):
 
         assert len(questions) == len(answers)
 
+        file_name = [file] * len(questions)
+
         # Pair questions and answers
-        qa_list.extend(zip(map(str.strip, questions), map(str.strip, answers)))
+        qa_list.extend(zip(map(str.strip, questions), map(str.strip, answers), file_name))
     except Exception as e:
         print(f"Error processing file {file}: {e}")
     return qa_list
