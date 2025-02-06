@@ -4,8 +4,8 @@ from typing import List
 
 import gradio as gr
 
-from src.database import get_rag_system, load_questions, load_final_summaries
 from medivocate.src.rag_pipeline.rag_system import RAGSystem
+from src.database import load_dataset, load_final_summaries, load_questions
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -17,7 +17,9 @@ class ChatInterface:
 
     def respond(self, message: str, history: List[List[str]]):
         result = ""
-        history = [(turn["role"], turn["content"]) for turn in history[-self.history_depth:]]
+        history = [
+            (turn["role"], turn["content"]) for turn in history[-self.history_depth :]
+        ]
         for text in self.rag_system.query(message, history):
             result += text
             yield result
@@ -25,14 +27,15 @@ class ChatInterface:
 
     def sample_questions(self, questions: List[str]):
         random_questions = random.sample(questions, 3)
-        example_questions = "\n".join([
-            "### Examples of questions"
-        ] + [f"- {question}" for question in random_questions])
+        example_questions = "\n".join(
+            ["## Examples of questions"]
+            + [f"- {question}" for question in random_questions]
+        )
         return example_questions
-    
+
     def sample_summaries(self, summaries: list[str]):
         random_summary = random.choice(summaries)
-        return f"### Summary\n{random_summary}"
+        return f"## Summary\n{random_summary}"
 
     def create_interface(self) -> gr.Blocks:
         questions: list[str] = load_questions()
@@ -45,16 +48,25 @@ class ChatInterface:
         )
 
         with gr.Blocks() as demo:
-            with gr.Row():
-                random_summary = random.choice(summaries)
-                sample_resume = gr.Markdown(f"### Summary\n{random_summary}")
-            with gr.Row():
-                sample_summary = gr.Button("Sample Summary")
-                sample_summary.click(
-                    fn=lambda: self.sample_summaries(summaries),
-                    inputs=[],
-                    outputs=sample_resume
-                )
+            with gr.Row(equal_height=True):
+                with gr.Column():
+                    with gr.Row():
+                        sample_resume = gr.Markdown(self.sample_summaries(summaries))
+                    with gr.Row():
+                        sample_summary = gr.Button("Sample Summary")
+                        sample_summary.click(
+                            fn=lambda: self.sample_summaries(summaries),
+                            inputs=[],
+                            outputs=sample_resume,
+                        )
+                with gr.Column(scale=2):
+                    # with gr.Row(equal_height=True):
+                    gr.ChatInterface(
+                        fn=self.respond,
+                        type="messages",
+                        title="Dikoka",
+                        description=description,
+                    )
             with gr.Row():
                 example_questions = gr.Markdown(self.sample_questions(questions))
             with gr.Row():
@@ -62,17 +74,17 @@ class ChatInterface:
                 sample_button.click(
                     fn=lambda: self.sample_questions(questions),
                     inputs=[],
-                    outputs=example_questions
+                    outputs=example_questions,
                 )
-            with gr.Row():
-                gr.ChatInterface(
-                    fn=self.respond,
-                    type="messages",
-                    title="Dikoka",
-                    description=description,
-                )
-
         return demo
+
+
+def get_rag_system(top_k_documents):
+    rag = RAGSystem("data/chroma_db", batch_size=64, top_k_documents=top_k_documents)
+    if not os.path.exists(rag.vector_store_management.persist_directory):
+        documents = load_dataset()
+        rag.initialize_vector_store(documents)
+    return rag
 
 
 # Usage example:
