@@ -3,13 +3,13 @@ import random
 from glob import glob
 
 from .vector_store.document_loader import load_dataset  # noqa
-import os
+
 
 def load_questions(language="fr"):
-    raw: dict[str, list[dict[str, str]]] = json.load(open(f"saved_summaries/question_{language}.json"))
-    questions = [
-        [example["query"], os.path.basename(path)] for path, fqa in raw.items() for example in fqa
-    ]
+    raw: dict[str, list[dict[str, str]]] = json.load(
+        open(f"saved_summaries/question_{language}.json")
+    )
+    questions = [example["query"] for _, fqa in raw.items() for example in fqa]
     return questions
 
 

@@ -1,7 +1,8 @@
+import json
 import os
 from glob import glob
 from typing import List
-import json
+
 import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -10,7 +11,9 @@ from langchain_core.documents import Document
 def load_qa_dataset(file_path: str):
     raw: dict[str, list[dict[str, str]]] = json.load(open(file_path))
     questions = [
-        [example["response"], os.path.basename(path)] for path, fqa in raw.items() for example in fqa
+        [example["response"], os.path.basename(path)]
+        for path, fqa in raw.items()
+        for example in fqa
     ]
     return questions
 
@@ -56,7 +59,7 @@ def load_pages_from_folders(folders_path: list[str], chunk_size=512, chunk_overl
     return data
 
 
-def load_dataset(language = "fr"):
+def load_dataset(language="fr"):
     question_path = f"saved_summaries/question_{language}.json"
     questions = load_qa_dataset(question_path)
 
@@ -64,29 +67,17 @@ def load_dataset(language = "fr"):
     summaries = load_summaries(summary_path)
 
     pages = load_pages_from_folders(
-        ["data/pages/297054", "data/pages/297054_Volume_2"], chunk_size=512, chunk_overlap=100
+        ["data/pages/297054", "data/pages/297054_Volume_2"],
+        chunk_size=512,
+        chunk_overlap=100,
     )
-    
+
     documents = questions + summaries + pages
     documents = [
         Document(page_content=doc, metadata={"source": source})
         for (doc, source) in documents
     ]
     return documents
-
-
-def sanitize_metadata(metadata: dict) -> dict:
-    sanitized = {}
-    for key, value in metadata.items():
-        if isinstance(value, list):
-            sanitized[key] = ", ".join(value)
-        elif isinstance(value, (str, int, float, bool)):
-            sanitized[key] = value
-        else:
-            raise ValueError(
-                f"Unsupported metadata type for key '{key}': {type(value)}"
-            )
-    return sanitized
 
 
 class DocumentLoader:
