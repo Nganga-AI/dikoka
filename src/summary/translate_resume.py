@@ -2,28 +2,24 @@ import argparse
 import json
 import logging
 import os
+from collections import defaultdict
 from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
 
-from ..utilities.llm_models import get_llm_model_chat
-from .prompts import TRANSLATE_PROMPT
 from ..llm_evaluation.improve_generated_qa import (
     parse_questions_answers_with_regex,
 )
-from collections import defaultdict
+from ..utilities.llm_models import get_llm_model_chat
+from .prompts import TRANSLATE_PROMPT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class Translator:
-    def __init__(
-        self,
-        output_folder: str = "summaries",
-        prompt = TRANSLATE_PROMPT
-    ):
+    def __init__(self, output_folder: str = "summaries", prompt=TRANSLATE_PROMPT):
         # Setup tokenizer and parameters
         self.output_folder = Path(output_folder)
         self.output_folder.mkdir(exist_ok=True)
@@ -33,6 +29,7 @@ class Translator:
             max_tokens=2500,
         )
         self.translate_prompt = prompt
+
 
 class TranslateSummary(Translator):
     def __init__(
@@ -69,6 +66,7 @@ class TranslateSummary(Translator):
             ) as f:
                 f.write(tr)
 
+
 class TranslateQA(Translator):
     def __init__(
         self,
@@ -78,7 +76,7 @@ class TranslateQA(Translator):
 
     def read_documents(self, folder_path: str) -> List[str]:
         return parse_questions_answers_with_regex(folder_path)
-    
+
     def translate(self, folder: str):
         data = self.read_documents(folder)
         summary_chain = self.translate_prompt | self.llm
@@ -87,23 +85,32 @@ class TranslateQA(Translator):
         for i, (query, response, file) in tqdm(enumerate(data)):
             query_fr = summary_chain.invoke({"text": query}).content.strip()
             response_fr = summary_chain.invoke({"text": response}).content.strip()
-            results[file].append({
-                "query": query_fr,
-                "response": response_fr,
-            })
-            results_base[file].append({
-                "query": query,
-                "response": response,
-            })
+            results[file].append(
+                {
+                    "query": query_fr,
+                    "response": response_fr,
+                }
+            )
+            results_base[file].append(
+                {
+                    "query": query,
+                    "response": response,
+                }
+            )
             if i % 10 == 0:
-                with open(os.path.join(self.output_folder, "question_fr.json"), "w") as file:
+                with open(
+                    os.path.join(self.output_folder, "question_fr.json"), "w"
+                ) as file:
                     json.dump(results, file, ensure_ascii=False)
-                with open(os.path.join(self.output_folder, "question_eng.json"), "w") as file:
+                with open(
+                    os.path.join(self.output_folder, "question_eng.json"), "w"
+                ) as file:
                     json.dump(results_base, file, ensure_ascii=False)
 
 
 def main_summary(
-    folder_path: str = "data/summaries/297054_Volume_2", output_folder: str = "data/summaries_fr"
+    folder_path: str = "data/summaries/297054_Volume_2",
+    output_folder: str = "data/summaries_fr",
 ):
     output_folder = os.path.join(output_folder, os.path.basename(folder_path))
     os.makedirs(output_folder, exist_ok=True)
@@ -111,6 +118,7 @@ def main_summary(
         output_folder=output_folder,
     )
     summarizer.translate(folder_path)
+
 
 def main_qa(
     folder_path: str = "data/questions", output_folder: str = "saved_summaries"
@@ -141,6 +149,6 @@ if __name__ == "__main__":
         action="store_true",
         help="to run summaries translation or all documents",
     )
-    args = parser.parse_args() 
+    args = parser.parse_args()
     funct = main_summary if args.summary else main_qa
     funct(folder_path=args.folder_path, output_folder=args.output_folder)

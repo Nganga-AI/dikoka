@@ -8,8 +8,8 @@ from .embedding import CustomEmbedding
 
 
 class LLMModel(Enum):
-    OLLAMA = ChatOllama
-    GROQ = ChatGroq
+    OLLAMA = "ChatOllama"
+    GROQ = "ChatGroq"
 
 
 def get_llm_model_chat(temperature=0.01, max_tokens: int = None):
