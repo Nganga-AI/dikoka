@@ -1,19 +1,18 @@
 import os
 from glob import glob
 from typing import List
-
+import json
 import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
-from ..llm_evaluation.improve_generated_qa import (
-    parse_questions_answers_with_regex,
-)
 
-
-def load_qa_dataset(folder_path: str):
-    qa_ds = parse_questions_answers_with_regex(folder_path)
-    return [(i[1], "QA_LLM") for i in qa_ds]
+def load_qa_dataset(file_path: str):
+    raw: dict[str, list[dict[str, str]]] = json.load(open(file_path))
+    questions = [
+        [example["response"], os.path.basename(path)] for path, fqa in raw.items() for example in fqa
+    ]
+    return questions
 
 
 def load_summaries(folder_path: str):
@@ -57,12 +56,17 @@ def load_pages_from_folders(folders_path: list[str], chunk_size=512, chunk_overl
     return data
 
 
-def load_dataset():
-    questions = load_qa_dataset("data/questions")
-    summaries = load_summaries("data/summaries")
+def load_dataset(language = "fr"):
+    question_path = f"saved_summaries/question_{language}.json"
+    questions = load_qa_dataset(question_path)
+
+    summary_path = "data/summaries/summaries_" + language
+    summaries = load_summaries(summary_path)
+
     pages = load_pages_from_folders(
-        ["data/297054", "data/297054_Volume_2"], chunk_size=512, chunk_overlap=100
+        ["data/pages/297054", "data/pages/297054_Volume_2"], chunk_size=512, chunk_overlap=100
     )
+    
     documents = questions + summaries + pages
     documents = [
         Document(page_content=doc, metadata={"source": source})
