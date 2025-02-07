@@ -58,12 +58,12 @@ class ChatInterface:
                 with gr.Column():
                     with gr.Row():
                         with gr.Column():
-                            gr.Markdown("## Summary")
-                        with gr.Column():
                             dpd = gr.Dropdown(
-                                choices=["fr", "eng"], value="fr", show_label=False
+                                choices=["fr", "eng"], value="fr", label="Choose language"
                             )
                             dpd.change(self.load_data, inputs=dpd)
+                        with gr.Column(scale=2):
+                            gr.Markdown("## Summary")
                     with gr.Row():
                         with gr.Column():
                             self.sample_resume = gr.Markdown(self.sample_summaries())
@@ -75,7 +75,6 @@ class ChatInterface:
                             outputs=self.sample_resume,
                         )
                 with gr.Column(scale=2):
-                    # with gr.Row(equal_height=True):
                     gr.ChatInterface(
                         fn=self.respond,
                         type="messages",
@@ -97,7 +96,7 @@ class ChatInterface:
 def get_rag_system(top_k_documents):
     rag = RAGSystem("data/chroma_db", batch_size=64, top_k_documents=top_k_documents)
     if not os.path.exists(rag.vector_store_management.persist_directory):
-        documents = load_dataset()
+        documents = load_dataset(os.getenv("LANG"))
         rag.initialize_vector_store(documents)
     return rag
 
