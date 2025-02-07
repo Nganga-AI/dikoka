@@ -21,7 +21,6 @@ def get_collection_name() -> str:
         os.getenv("HF_MODEL", "default_model")
         .split(":")[0]
         .split("/")[-1]
-        .replace("-v1", "")
     )
 
 
