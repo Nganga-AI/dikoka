@@ -16,6 +16,7 @@ class CustomEmbedding(BaseModel, Embeddings):
         default_factory=lambda: None
     )
     cpu_embedding: HuggingFaceEmbeddings = Field(default_factory=lambda: None)
+    matryoshka_dim: int = Field(default=256)
 
     def get_instruction(self):
         if "nomic" in os.getenv("HF_MODEL"):
@@ -63,7 +64,8 @@ class CustomEmbedding(BaseModel, Embeddings):
             self.cpu_embedding = HuggingFaceEmbeddings(
                 model_name=os.getenv("HF_MODEL"),  # You can replace with any HF model
                 model_kwargs={
-                    "device": "cpu" if not torch.cuda.is_available() else "cuda"
+                    "device": "cpu" if not torch.cuda.is_available() else "cuda",
+                    "trust_remote_code": True,
                 },
                 encode_kwargs={
                     "normalize_embeddings": True,
@@ -85,4 +87,5 @@ class CustomEmbedding(BaseModel, Embeddings):
         except:
             logging.warning("Issue with hosted embedding, moving to CPU")
             embed = self.cpu_embedding.embed_query(text)
-        return [e[:self.matryoshka_dim] for e in embed] if self.matryoshka_dim else embed
+        logging.warning(text)
+        return embed[:self.matryoshka_dim] if self.matryoshka_dim else embed

@@ -4,7 +4,7 @@ from typing import List
 
 import gradio as gr
 
-from medivocate.src.rag_pipeline.rag_system import RAGSystem
+from src.rag_pipeline.rag_system import RAGSystem
 from src.database import load_dataset, load_final_summaries, load_questions
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
