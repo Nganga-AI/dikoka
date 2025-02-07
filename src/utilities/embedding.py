@@ -17,19 +17,30 @@ class CustomEmbedding(BaseModel, Embeddings):
     )
     cpu_embedding: HuggingFaceEmbeddings = Field(default_factory=lambda: None)
 
-    def __init__(self, **kwargs: Any):
-        super().__init__(**kwargs)
-        query_instruction = (
+    def get_instruction(self):
+        if "nomic" in os.getenv("HF_MODEL"):
+            return (
+                "search_query: "
+                if (os.getenv("IS_APP", "0") == "1")
+                else "search_document: "
+            )
+        return (
             "Represent this sentence for searching relevant passages:"
             if (os.getenv("IS_APP", "0") == "1")
             else ""
         )
+
+    def __init__(self, matryoshka_dim = 256, **kwargs: Any):
+        super().__init__(**kwargs)
+        query_instruction = self.get_instruction()
+        self.matryoshka_dim = matryoshka_dim
         if torch.cuda.is_available():
             logging.info("CUDA is available")
             self.hosted_embedding = HuggingFaceEmbeddings(
                 model_name=os.getenv("HF_MODEL"),  # You can replace with any HF model
                 model_kwargs={
-                    "device": "cpu" if not torch.cuda.is_available() else "cuda"
+                    "device": "cpu" if not torch.cuda.is_available() else "cuda",
+                    "trust_remote_code": True,
                 },
                 encode_kwargs={
                     "normalize_embeddings": True,
@@ -62,14 +73,16 @@ class CustomEmbedding(BaseModel, Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         try:
-            return self.hosted_embedding.embed_documents(texts)
+            embed = self.hosted_embedding.embed_documents(texts)
         except:
             logging.warning("Issue with batch hosted embedding, moving to CPU")
-            return self.cpu_embedding.embed_documents(texts)
+            embed = self.cpu_embedding.embed_documents(texts)
+        return [e[:self.matryoshka_dim] for e in embed] if self.matryoshka_dim else embed
 
     def embed_query(self, text: str) -> List[float]:
         try:
-            return self.hosted_embedding.embed_query(text)
+            embed = self.hosted_embedding.embed_query(text)
         except:
             logging.warning("Issue with hosted embedding, moving to CPU")
-            return self.cpu_embedding.embed_query(text)
+            embed = self.cpu_embedding.embed_query(text)
+        return [e[:self.matryoshka_dim] for e in embed] if self.matryoshka_dim else embed
