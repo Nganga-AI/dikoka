@@ -174,10 +174,6 @@ IMPROVE_QA_CONTENT = """
 """
 
 VALIDATOR_PROMPT_FR = """
-Voici une version du prompt adaptée avec une sortie en format JSON, utilisant des clés sans accents et en minuscules :  
-
----
-
 # Validation des Réponses RAG  
 
 Vous êtes un validateur de réponses RAG (Retrieval-Augmented Generation). Votre tâche consiste à évaluer si une réponse générée par un système RAG correspond correctement à la réponse attendue pour une question donnée. Analysez la pertinence, l'exactitude et la complétude de la réponse RAG.  
