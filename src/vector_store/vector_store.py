@@ -17,11 +17,7 @@ def get_collection_name() -> str:
     Returns:
         str: Processed collection name.
     """
-    return (
-        os.getenv("HF_MODEL", "default_model")
-        .split(":")[0]
-        .split("/")[-1]
-    )
+    return os.getenv("HF_MODEL", "default_model").split(":")[0].split("/")[-1]
 
 
 class VectorStoreManager:

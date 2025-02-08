@@ -4,8 +4,8 @@ from typing import List
 
 import gradio as gr
 
-from src.rag_pipeline.rag_system import RAGSystem
 from src.database import load_dataset, load_final_summaries, load_questions
+from src.rag_pipeline.rag_system import RAGSystem
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -59,7 +59,9 @@ class ChatInterface:
                     with gr.Row():
                         with gr.Column():
                             dpd = gr.Dropdown(
-                                choices=["fr", "eng"], value="fr", label="Choose language"
+                                choices=["fr", "eng"],
+                                value="fr",
+                                label="Choose language",
                             )
                             dpd.change(self.load_data, inputs=dpd)
                         with gr.Column(scale=2):
