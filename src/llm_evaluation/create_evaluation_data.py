@@ -16,6 +16,15 @@ from .prompts import OPEN_QUESTION_PROMPT_EN as OPEN_QUESTION_PROMPT
 
 
 def load_data(path: str) -> str:
+    """
+    Loads data from a given file path.
+
+    Args:
+        path (str): Path to the file.
+
+    Returns:
+        str: Content of the file.
+    """
     if path.endswith(".txt"):
         return open(path).read()
     return json.load(open(path))["kwargs"]["page_content"]
@@ -31,12 +40,13 @@ def generate_questions(
         input_folder (str): Path to the folder containing input text files.
         n_files (int): Number of files to process.
         output_folder (str): Path to the folder where output files will be saved.
+        file_type (str): Type of files to process (e.g., "json" or "txt").
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    files = glob(os.path.join(input_folder, "*." + file_type)) + glob(
-        os.path.join(input_folder, "*/*." + file_type)
+    files = glob(os.path.join(input_folder, f"*.{file_type}")) + glob(
+        os.path.join(input_folder, f"*/*.{file_type}")
     )
     logging.info(f"Found {len(files)} files in {input_folder}.")
 
@@ -88,7 +98,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--file_type",
-        default="txt",  # json ou txt
+        default="txt",  # json or txt
         type=str,
         help="Type of file to consider",
     )

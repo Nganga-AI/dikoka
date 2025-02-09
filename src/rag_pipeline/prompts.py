@@ -56,6 +56,7 @@ contextualize_q_system_prompt = (
     " generate a standalone query that can be understood without requiring prior context."
     " DO NOT answer the query—rephrase it if necessary; otherwise, return it as is."
     " It's important to return solely the query—rephrased or as provided—without any additional verbose text."
+    " Keep the same language as the query input."
 )
 
 CONTEXTUEL_QUERY_PROMPT = ChatPromptTemplate.from_messages(
