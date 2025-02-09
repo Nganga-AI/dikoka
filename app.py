@@ -11,13 +11,23 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 class ChatInterface:
+    """
+    A class to create and manage the chat interface for the Dikoka AI assistant.
+    """
+
     def __init__(self, rag_system: RAGSystem):
+        """
+        Initialize the ChatInterface with a RAG system.
+        """
         self.rag_system = rag_system
         self.history_depth = int(os.getenv("MAX_MESSAGES") or 5) * 2
         self.questions = []
         self.summaries = []
 
     def respond(self, message: str, history: List[List[str]]):
+        """
+        Generate a response to the user's message using the RAG system.
+        """
         result = ""
         history = [
             (turn["role"], turn["content"]) for turn in history[-self.history_depth :]
@@ -28,6 +38,9 @@ class ChatInterface:
         return result
 
     def sample_questions(self):
+        """
+        Sample a few random questions from the loaded questions.
+        """
         random_questions = random.sample(self.questions, 3)
         example_questions = "\n".join(
             ["## Examples of questions"]
@@ -36,14 +49,23 @@ class ChatInterface:
         return example_questions
 
     def sample_summaries(self):
+        """
+        Sample a random summary from the loaded summaries.
+        """
         random_summary = random.choice(self.summaries)
         return random_summary
 
     def load_data(self, lang: str):
+        """
+        Load questions and summaries for the specified language.
+        """
         self.questions = load_questions(lang)
         self.summaries = load_final_summaries(lang)
 
     def create_interface(self) -> gr.Blocks:
+        """
+        Create the Gradio interface for the chat application.
+        """
         self.load_data("fr")
 
         description = (
@@ -96,6 +118,9 @@ class ChatInterface:
 
 
 def get_rag_system(top_k_documents):
+    """
+    Initialize and return a RAG system with the specified number of top documents.
+    """
     rag = RAGSystem("data/chroma_db", batch_size=64, top_k_documents=top_k_documents)
     if not os.path.exists(rag.vector_store_management.persist_directory):
         documents = load_dataset(os.getenv("LANG"))

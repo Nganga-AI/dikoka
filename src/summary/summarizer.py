@@ -13,6 +13,10 @@ from .prompts import FINAL_PROMPT, SUMMARY_PROMPT
 
 
 class HierarchicalSummarizer:
+    """
+    A class to perform hierarchical summarization of text documents.
+    """
+
     def __init__(
         self,
         max_tokens_per_chunk: int = 4000,
@@ -20,19 +24,16 @@ class HierarchicalSummarizer:
         chunk_overlap: int = 200,
         output_folder: str = "summaries",
     ):
-        # Setup tokenizer and parameters
+        """
+        Initialize the HierarchicalSummarizer with given parameters.
+        """
         self.encoding = tiktoken.get_encoding("cl100k_base")
         self.max_tokens = max_tokens_per_chunk
         self.output_folder = Path(output_folder)
         self.output_folder.mkdir(exist_ok=True)
 
-        # Initialize LLM
-        self.llm = get_llm_model_chat(
-            temperature=0.8,
-            max_tokens=1500,
-        )
+        self.llm = get_llm_model_chat(temperature=0.8, max_tokens=1500)
 
-        # Setup text splitter with given parameters
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=min_chunk_size,
             chunk_overlap=chunk_overlap,
@@ -40,15 +41,15 @@ class HierarchicalSummarizer:
             separators=["\n\n", "\n", ". ", " ", ""],
         )
 
-        # Setup prompt for chunk-level summarization
         self.summary_prompt = SUMMARY_PROMPT
 
-        # Setup logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
     def read_documents(self, folder_path: str) -> List[str]:
-        """Read and return contents of all .txt files in the folder (sorted)."""
+        """
+        Read and return contents of all .txt files in the folder (sorted).
+        """
         folder = Path(folder_path)
         txt_files = sorted(folder.glob("*.txt"))
         documents = []
@@ -61,25 +62,32 @@ class HierarchicalSummarizer:
         return documents
 
     def merge_documents(self, documents: List[str]) -> str:
-        """Merge document texts into a single string."""
+        """
+        Merge document texts into a single string.
+        """
         return "\n\n".join(documents)
 
     def get_optimal_chunk_size(self, text: str) -> int:
-        """Determine an optimal chunk size (in characters) based on token limits."""
+        """
+        Determine an optimal chunk size (in characters) based on token limits.
+        """
         total_tokens = len(self.encoding.encode(text))
         if total_tokens <= self.max_tokens:
             return len(text)
-        # Estimate characters per token and reserve 90% of max tokens
         chars_per_token = len(text) / total_tokens
         return int(self.max_tokens * chars_per_token * 0.9)
 
     def split_into_chunks(self, text: str) -> List[str]:
-        """Split the text into manageable chunks using the text splitter."""
+        """
+        Split the text into manageable chunks using the text splitter.
+        """
         docs = self.text_splitter.create_documents([text])
         return [doc.page_content for doc in docs]
 
     def summarize_chunk(self, chunk_text: str, context: str) -> str:
-        """Summarize a single chunk using the summary prompt."""
+        """
+        Summarize a single chunk using the summary prompt.
+        """
         summary_chain = self.summary_prompt | self.llm
         result = summary_chain.invoke({"text": chunk_text, "context": context})
         return result.content.strip()
@@ -87,7 +95,9 @@ class HierarchicalSummarizer:
     def save_intermediate_summary(
         self, summary_text: str, level: int, chunk_index: int
     ) -> None:
-        """Save the intermediate summary for a chunk with a timestamp."""
+        """
+        Save the intermediate summary for a chunk with a timestamp.
+        """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = (
             self.output_folder / f"level_{level}_chunk_{chunk_index}_{timestamp}.txt"
@@ -101,6 +111,9 @@ class HierarchicalSummarizer:
     def load_or_summarize(
         self, level: int, chunk_pos: int, chunk: str, summary_text: str
     ):
+        """
+        Load an existing summary if available, otherwise summarize the chunk.
+        """
         files = list(self.output_folder.glob(f"level_{level}_chunk_{chunk_pos}_*.txt"))
         if files:
             return open(files[0]).read(), True
@@ -125,7 +138,9 @@ class HierarchicalSummarizer:
         return level_summaries
 
     def create_final_summary(self, text: str) -> str:
-        """Create a final summary from the aggregated summaries."""
+        """
+        Create a final summary from the aggregated summaries.
+        """
         final_prompt = FINAL_PROMPT
         final_chain = final_prompt | self.llm
         final_result = final_chain.invoke({"SECTION_SUMMARIES": text})
@@ -147,7 +162,6 @@ class HierarchicalSummarizer:
         current_text = full_text
         all_level_summaries = []
 
-        # Continue processing until the text is short enough
         while (
             len(self.encoding.encode(current_text)) > self.max_tokens
             and level <= max_level
@@ -169,6 +183,9 @@ class HierarchicalSummarizer:
 
 
 def main(folder_path: str = "data/297054", output_folder: str = "data/summaries"):
+    """
+    Main function to execute the hierarchical summarization process.
+    """
     output_folder = os.path.join(output_folder, os.path.basename(folder_path))
     os.makedirs(output_folder, exist_ok=True)
     summarizer = HierarchicalSummarizer(

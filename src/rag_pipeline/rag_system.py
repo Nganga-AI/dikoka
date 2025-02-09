@@ -16,12 +16,24 @@ from .prompts import CHAT_PROMPT, CONTEXTUEL_QUERY_PROMPT
 
 
 class RAGSystem:
+    """
+    Retrieval-Augmented Generation (RAG) system for document retrieval and question answering.
+    """
+
     def __init__(
         self,
         persist_directory_dir="data/chroma_db",
         batch_size: int = 64,
         top_k_documents=5,
     ):
+        """
+        Initializes the RAGSystem with the given parameters.
+
+        Args:
+            persist_directory_dir (str): Directory to persist the vector store.
+            batch_size (int): Number of documents to process in each batch.
+            top_k_documents (int): Number of top documents to retrieve.
+        """
         self.top_k_documents = top_k_documents
         self.llm = self._get_llm()
         self.chain: Optional[BaseConversationalRetrievalChain] = None
@@ -29,20 +41,37 @@ class RAGSystem:
             persist_directory_dir, batch_size
         )
 
-    def _get_llm(
-        self,
-    ):
+    def _get_llm(self):
+        """
+        Retrieves the language model for the RAG system.
+
+        Returns:
+            The language model.
+        """
         return get_llm_model_chat(temperature=0.1, max_tokens=1000)
 
     def load_documents(self) -> List:
-        """Load and split documents from the specified directory"""
+        """
+        Loads and splits documents from the specified directory.
+
+        Returns:
+            List: List of loaded documents.
+        """
         return self.vector_store_management.load_and_process_documents()
 
     def initialize_vector_store(self, documents: List = None):
-        """Initialize or load the vector store"""
+        """
+        Initializes or loads the vector store.
+
+        Args:
+            documents (List, optional): List of documents to initialize the vector store. Defaults to None.
+        """
         self.vector_store_management.initialize_vector_store(documents)
 
     def setup_rag_chain(self):
+        """
+        Sets up the RAG chain for document retrieval and question answering.
+        """
         if self.chain is not None:
             return
         retriever = self.vector_store_management.create_retriever(
@@ -61,7 +90,16 @@ class RAGSystem:
         return self.chain
 
     def query(self, question: str, history: list = []):
-        """Query the RAG system"""
+        """
+        Queries the RAG system with a question and chat history.
+
+        Args:
+            question (str): The question to query.
+            history (list, optional): The chat history. Defaults to [].
+
+        Yields:
+            str: The answer from the RAG system.
+        """
         if not self.vector_store_management.vs_initialized:
             self.initialize_vector_store()
 
