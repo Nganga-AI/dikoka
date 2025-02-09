@@ -40,7 +40,9 @@ Context:
 chat_messages = [
     MessagesPlaceholder(variable_name="chat_history"),
     SystemMessagePromptTemplate.from_template(system_prompt),
-    HumanMessagePromptTemplate.from_template("Answer in the same language as the input:\n{input}"),
+    HumanMessagePromptTemplate.from_template(
+        "Answer in the same language as the input:\n{input}"
+    ),
 ]
 
 # Create the chat prompt template
@@ -60,8 +62,10 @@ Your task is to generate a standalone query that is fully understandable without
 """
 
 # Create the contextual query prompt template
-CONTEXTUEL_QUERY_PROMPT = ChatPromptTemplate.from_messages([
-    SystemMessagePromptTemplate.from_template(standalone_query_instructions),
-    MessagesPlaceholder(variable_name="chat_history"),
-    HumanMessagePromptTemplate.from_template("{input}"),
-])
+CONTEXTUEL_QUERY_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        SystemMessagePromptTemplate.from_template(standalone_query_instructions),
+        MessagesPlaceholder(variable_name="chat_history"),
+        HumanMessagePromptTemplate.from_template("{input}"),
+    ]
+)

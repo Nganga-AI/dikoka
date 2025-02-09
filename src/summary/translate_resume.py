@@ -8,7 +8,9 @@ from typing import List
 
 from tqdm import tqdm
 
-from ..llm_evaluation.improve_generated_qa import parse_questions_answers_with_regex
+from ..llm_evaluation.improve_generated_qa import (
+    parse_questions_answers_with_regex,
+)
 from ..utilities.llm_models import get_llm_model_chat
 from .prompts import TRANSLATE_PROMPT
 
@@ -69,7 +71,9 @@ class TranslateSummary(Translator):
         files = self.read_documents(folder)
         for dat_file, file in tqdm(files):
             tr = self.translate_chunk(dat_file)
-            with open(os.path.join(self.output_folder, os.path.basename(file)), "w") as f:
+            with open(
+                os.path.join(self.output_folder, os.path.basename(file)), "w"
+            ) as f:
                 f.write(tr)
 
 
@@ -101,13 +105,20 @@ class TranslateQA(Translator):
             results[file].append({"query": query_fr, "response": response_fr})
             results_base[file].append({"query": query, "response": response})
             if i % 10 == 0:
-                with open(os.path.join(self.output_folder, "question_fr.json"), "w") as file:
+                with open(
+                    os.path.join(self.output_folder, "question_fr.json"), "w"
+                ) as file:
                     json.dump(results, file, ensure_ascii=False)
-                with open(os.path.join(self.output_folder, "question_eng.json"), "w") as file:
+                with open(
+                    os.path.join(self.output_folder, "question_eng.json"), "w"
+                ) as file:
                     json.dump(results_base, file, ensure_ascii=False)
 
 
-def main_summary(folder_path: str = "data/summaries/297054_Volume_2", output_folder: str = "data/summaries_fr"):
+def main_summary(
+    folder_path: str = "data/summaries/297054_Volume_2",
+    output_folder: str = "data/summaries_fr",
+):
     """
     Main function to execute the summary translation process.
     """
@@ -117,7 +128,9 @@ def main_summary(folder_path: str = "data/summaries/297054_Volume_2", output_fol
     summarizer.translate(folder_path)
 
 
-def main_qa(folder_path: str = "data/questions", output_folder: str = "saved_summaries"):
+def main_qa(
+    folder_path: str = "data/questions", output_folder: str = "saved_summaries"
+):
     """
     Main function to execute the QA translation process.
     """

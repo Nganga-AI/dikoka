@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict
+from typing import Dict, List
 
 from langchain.retrievers import MultiQueryRetriever
 from langchain_chroma import Chroma
@@ -47,7 +47,9 @@ class VectorStoreManager:
         Args:
             documents (List[Document]): List of documents to process.
         """
-        for i in tqdm(range(0, len(documents), self.batch_size), desc="Processing documents"):
+        for i in tqdm(
+            range(0, len(documents), self.batch_size), desc="Processing documents"
+        ):
             batch = documents[i : i + self.batch_size]
             if not self.vs_initialized:
                 self.vector_stores["chroma"] = Chroma.from_documents(
@@ -77,7 +79,9 @@ class VectorStoreManager:
             )
         self.vs_initialized = True
 
-    def create_retriever(self, llm, n_documents: int, bm25_portion: float = 0.8) -> MultiQueryRetriever:
+    def create_retriever(
+        self, llm, n_documents: int, bm25_portion: float = 0.8
+    ) -> MultiQueryRetriever:
         """
         Creates a retriever using Chroma.
 
@@ -90,7 +94,9 @@ class VectorStoreManager:
             MultiQueryRetriever: Configured retriever.
         """
         self.vector_store = MultiQueryRetriever.from_llm(
-            retriever=self.vector_stores["chroma"].as_retriever(search_kwargs={"k": n_documents}),
+            retriever=self.vector_stores["chroma"].as_retriever(
+                search_kwargs={"k": n_documents}
+            ),
             llm=llm,
             include_original=True,
         )

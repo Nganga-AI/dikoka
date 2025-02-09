@@ -1,7 +1,7 @@
 import json
 import os
 from glob import glob
-from typing import List, Dict
+from typing import Dict, List
 
 import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -27,7 +27,9 @@ def load_qa_dataset(file_path: str) -> List[List[str]]:
     return questions
 
 
-def load_summaries(folder_path: str, chunk_size=512, chunk_overlap=100) -> List[List[str]]:
+def load_summaries(
+    folder_path: str, chunk_size=512, chunk_overlap=100
+) -> List[List[str]]:
     """
     Load summaries from text files in a folder and split them into chunks.
 
@@ -60,7 +62,9 @@ def load_summaries(folder_path: str, chunk_size=512, chunk_overlap=100) -> List[
     return summaries
 
 
-def load_pages_from_folder(folder_path: str, chunk_size=512, chunk_overlap=100) -> List[List[str]]:
+def load_pages_from_folder(
+    folder_path: str, chunk_size=512, chunk_overlap=100
+) -> List[List[str]]:
     """
     Load pages from text files in a folder and split them into chunks.
 
@@ -86,7 +90,9 @@ def load_pages_from_folder(folder_path: str, chunk_size=512, chunk_overlap=100) 
     return [(i, name) for i in summaries]
 
 
-def load_pages_from_folders(folders_path: List[str], chunk_size=512, chunk_overlap=100) -> List[List[str]]:
+def load_pages_from_folders(
+    folders_path: List[str], chunk_size=512, chunk_overlap=100
+) -> List[List[str]]:
     """
     Load pages from multiple folders and split them into chunks.
 
